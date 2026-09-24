@@ -20,7 +20,21 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and push Docker image
+      - name: Build Docker image
         run: |
-          docker build . --tag ghcr.io/shadab457khan/skills-publish-docker-images/stackoverflown:main
-          docker push ghcr.io/shadab457khan/skills-publish-docker-images/stackoverflown:main
+          docker build \
+            --tag ghcr.io/shadab457khan/skills-publish-docker-images/stackoverflown:main \
+            .
+
+      - name: Push Docker image
+        run: |
+          for attempt in 1 2 3; do
+            if docker push ghcr.io/shadab457khan/skills-publish-docker-images/stackoverflown:main; then
+              exit 0
+            fi
+
+            echo "Push failed on attempt ${attempt}; retrying..."
+            sleep $((attempt * 10))
+          done
+
+          exit 1
