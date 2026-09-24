@@ -20,21 +20,16 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build Docker image
-        run: |
-          docker build \
-            --tag ghcr.io/shadab457khan/skills-publish-docker-images/stackoverflown:main \
-            .
-
-      - name: Push Docker image
-        run: |
-          for attempt in 1 2 3; do
-            if docker push ghcr.io/shadab457khan/skills-publish-docker-images/stackoverflown:main; then
-              exit 0
-            fi
-
-            echo "Push failed on attempt ${attempt}; retrying..."
-            sleep $((attempt * 10))
-          done
-
-          exit 1
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ghcr.io/shadab457khan/skills-publish-docker-images/stackoverflown:main
+            ghcr.io/shadab457khan/skills-publish-docker-images/stackoverflown:${{ github.sha }}
